@@ -9,8 +9,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     // const { remove, getDecoded } = useJwt();
     // const { allowedPages } = useUserState();
 
-    const tokenExp = true;
-    if (!tokenExp) {
+    const token = localStorage.getItem("token");
+    if (!token) {
         // const currentDate = Date.now() / 1000;
         // if (currentDate > tokenExp) {
         //     remove();

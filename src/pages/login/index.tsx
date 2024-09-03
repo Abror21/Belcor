@@ -1,8 +1,34 @@
 import React from 'react'
 import { StyledLogin } from './style'
 import { useForm } from "react-hook-form";
+import { useNavigate } from 'react-router-dom';
+import { Snackbar, SnackbarOrigin } from '@mui/material';
+
+interface LoginProps {
+  username: string;
+  password: string;
+}
+interface State extends SnackbarOrigin {
+  open: boolean;
+}
 
 const Login = () => {
+
+  const navigate = useNavigate();
+
+  const [state, setState] = React.useState<State>({
+    open: false,
+    vertical: 'top',
+    horizontal: 'center',
+  });
+  const { vertical, horizontal, open } = state;
+
+  const handleClick = (newState: any) => {
+    setState({ ...newState, open: true });
+  };
+  const handleClose = () => {
+    setState({ ...state, open: false });
+  };
 
   const {
     register,
@@ -11,27 +37,41 @@ const Login = () => {
     formState: { errors }
   } = useForm({
     defaultValues: {
-      example: "",
-      exampleRequired: ""
+      username: "",
+      password: ""
     }
   });
 
   return (
     <StyledLogin>
       <form
-        onSubmit={handleSubmit((data) => {
-          alert(JSON.stringify(data));
+        onSubmit={handleSubmit(({username, password}: LoginProps) => {
+          if(username == 'admin' && password == 'admin'){
+            localStorage.setItem('token', 'token');
+            navigate("/");
+          } else if(username != 'admin' || password != 'admin'){
+            handleClick({ vertical: 'top', horizontal: 'center' });
+          }
         })}
       >
-        <label>Example</label>
-        <input {...register("example")} defaultValue="test" />
-        <label>ExampleRequired</label>
+        <label>Username</label>
+        <input {...register("username", { required: true, maxLength: 10 })} />
+        {errors.username && <p>This field is required</p>}
+        <label>Password</label>
         <input
-          {...register("exampleRequired", { required: true, maxLength: 10 })}
+          {...register("password", { required: true, maxLength: 10 })}
         />
-        {errors.exampleRequired && <p>This field is required</p>}
+        {errors.password && <p>This field is required</p>}
         <input type="submit" />
       </form>
+
+      <Snackbar
+        anchorOrigin={{ vertical, horizontal }}
+        open={open}
+        onClose={handleClose}
+        message="Username or password is incorrect"
+        key={vertical + horizontal}
+      />
     </StyledLogin>
   )
 }
