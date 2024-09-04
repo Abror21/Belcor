@@ -8,6 +8,7 @@ import SubmitForm from './components/submit-form';
 import Table from '../../components/table';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import IconElement from './components/icon-element';
 
 // interface Data {
 //     delivered: string;
@@ -22,7 +23,8 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 export interface HeadCell {
     id: string;
     label: string;
-    render?: (param?: any) => ReactNode;
+    info?: string;
+    render?: (param?: any, call?: Function) => ReactNode;
 }
 export type DynamicObject = {
     [key: string]: any;
@@ -34,7 +36,6 @@ export default function Home() {
     const [isSnackOpen, setIsSnackOpen] = useState<boolean>(false);
     const [loading, setloading] = useState(false);
     const [orders, setOrders] = useState<any>([]);
-    const [open, setOpen] = useState(false);
 
     const fetchOrders = async () => {
         setloading(true);
@@ -62,15 +63,16 @@ export default function Home() {
         {
             id: 'icon',
             label: '',
-            render: (param) => (
+            render: (param, call=()=>{}) => (
                 <IconButton
                     aria-label="expand row"
                     size="small"
-                    onClick={() => setOpen(!open)}
+                    onClick={() => call()}
                 >
-                    {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                    <KeyboardArrowDownIcon />
                 </IconButton>
-            )
+            ),
+            info: 'description'
         },
         {
             id: 'name',

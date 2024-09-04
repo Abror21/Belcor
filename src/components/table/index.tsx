@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { StyledTable } from './style'
-import { Box, CircularProgress, IconButton, Paper, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Typography } from '@mui/material';
+import { Box, CircularProgress, Collapse, IconButton, Paper, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Typography } from '@mui/material';
 import UITable from '@mui/material/Table';
 import { visuallyHidden } from '@mui/utils';
 import { DynamicObject, HeadCell } from '../../pages/home';
+import CustomTableRow from './table-row';
 
 type Order = 'asc' | 'desc';
 
@@ -121,15 +122,12 @@ const Table = ({
                                 <TableHead>
                                     <TableRow>
                                         {headCells.map((headCell) => {
-                                            console.log('headCell: ', headCell);
                                             if (!headCell.label) {
-                                                // const el = headCell.render();
                                                 return (
                                                     <TableCell
                                                         key={headCell.id}
                                                         padding='normal'
                                                     >
-
                                                     </TableCell>
                                                 )
                                             } else {
@@ -160,47 +158,11 @@ const Table = ({
                                 </TableHead>
                                 <TableBody>
                                     {visibleRows.map((row, index) => {
-                                        const newRows = headCells.map((cell, index) => {
-                                            if (cell.render) {
-                                                const element = cell.render(row);
-                                                return (
-                                                    <TableCell>
-                                                        {element}
-                                                    </TableCell>
-                                                )
-                                            } else {
-                                                return (
-                                                    <TableCell>
-                                                        {row[cell.id]}
-                                                    </TableCell>
-                                                )
-                                            }
-                                        })
-
                                         return (
-                                            <>
-                                                <TableRow
-                                                    hover
-                                                    // onClick={(event) => handleClick(event, row.id)}
-                                                    tabIndex={-1}
-                                                    key={row.id}
-                                                    sx={{ cursor: 'pointer' }}
-                                                >
-                                                    {/* <TableCell>
-                                                        <IconButton
-                                                            aria-label="expand row"
-                                                            size="small"
-                                                        // onClick={() => setOpen(!open)}
-                                                        >
-                                                            {true ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                                                        </IconButton>
-                                                    </TableCell> */}
-                                                    {newRows}
-                                                </TableRow>
-                                                <TableRow>
-
-                                                </TableRow>
-                                            </>
+                                            <CustomTableRow
+                                                row={row}
+                                                headCells={headCells}
+                                            />
                                         );
                                     })}
                                 </TableBody>
