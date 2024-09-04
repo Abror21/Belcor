@@ -18,9 +18,6 @@ interface InputProps {
     delivered: boolean;
     description: string;
 }
-interface State extends SnackbarOrigin {
-    open: boolean;
-}
 
 interface SubmitFormProps {
     loading: boolean;
@@ -62,8 +59,8 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
             price: data.price,
             type: data.type,
             weight: data.weight,
-            orderData: dayjs(data.orderDate).format('DD.MM.YYYY'),
-            delivered: data.delivered,
+            orderDate: dayjs(data.orderDate).format('DD.MM.YYYY'),
+            delivered: data.delivered ? 'Delivered' : 'Not delivered',
             description: data.description
         })
             .then(res => {
@@ -169,15 +166,6 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
                     >
                         Cancel
                     </Button>
-                    {/* loading */}
-
-                    {/* <Button
-                        type='submit'
-                        variant='contained'
-                        color='success'
-                    >
-                        Submit
-                    </Button> */}
 
                     <Box sx={{ m: 1, position: 'relative', width: 'fit-content' }}>
                         <Button
