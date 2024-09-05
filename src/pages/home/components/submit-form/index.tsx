@@ -1,23 +1,14 @@
-import React, { Dispatch, SetStateAction } from 'react'
+import React, { Dispatch, SetStateAction, useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { StyledForm } from './style';
-import { Box, Button, Checkbox, CircularProgress, FormControl, FormControlLabel, InputLabel, MenuItem, Select, SnackbarOrigin, TextField } from '@mui/material';
+import { Box, Button, Checkbox, CircularProgress, FormControl, FormControlLabel, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs, { Dayjs } from 'dayjs';
 import app from '../../../../firebaseConfig';
 import { getDatabase, ref, set, push, get } from 'firebase/database';
-
-interface InputProps {
-    name: string;
-    price: number | null;
-    type: string;
-    weight: number | null;
-    orderDate: Dayjs | null;
-    delivered: boolean;
-    description: string;
-}
+import { InputProps } from '../..';
 
 interface SubmitFormProps {
     loading: boolean;
@@ -26,9 +17,22 @@ interface SubmitFormProps {
     openSnack: Dispatch<SetStateAction<boolean>>;
     fetchOrders: Function;
     setloading: Dispatch<SetStateAction<boolean>>;
+    formValues?: InputProps | null;
 }
 
-const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders, setloading }: SubmitFormProps) => {
+const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders, setloading, formValues }: SubmitFormProps) => {
+
+    useEffect(() => {
+        if (formValues) {
+            setValue('name', formValues.name);
+            setValue('price', formValues.price);
+            setValue('type', formValues.type);
+            setValue('weight', formValues.weight);
+            setValue('orderDate', formValues.orderDate ? dayjs(formValues.orderDate, 'DD.MM.YYYY') : null);
+            setValue('delivered', formValues.delivered == 'Delivered' ? true : false);
+            setValue('description', formValues.description);
+        }
+    }, [formValues])
 
     const {
         register,
@@ -50,7 +54,7 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
         }
     });
 
-    const postData = (data: InputProps) => {
+    const postOrder = (data: InputProps) => {
         setloading(true);
         const db = getDatabase(app);
         const newDocRef = push(ref(db, "orders"));
@@ -59,7 +63,7 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
             price: data.price,
             type: data.type,
             weight: data.weight,
-            orderDate: dayjs(data.orderDate).format('DD.MM.YYYY'),
+            orderDate: data.orderDate ? dayjs(data.orderDate).format('DD.MM.YYYY') : null,
             delivered: data.delivered ? 'Delivered' : 'Not delivered',
             description: data.description
         })
@@ -76,12 +80,44 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
             })
             .finally(() => setloading(false))
     }
+    const updateOrder = (data: InputProps, id: string) => {
+        setloading(true);
+        const db = getDatabase(app);
+        const newOrderRef = ref(db, `orders/${id}`);
+        set(newOrderRef, {
+            name: data.name,
+            price: data.price,
+            type: data.type,
+            weight: data.weight,
+            orderDate: data.orderDate ? dayjs(data.orderDate).format('DD.MM.YYYY') : null,
+            delivered: data.delivered ? 'Delivered' : 'Not delivered',
+            description: data.description
+        })
+            .then(() => {
+                closeModal(false);
+                snackMessage('Updated successfully');
+                openSnack(true);
+                reset();
+                fetchOrders();
+            })
+            .catch(() => {
+                snackMessage('Something went wrong(');
+                openSnack(true);
+            })
+            .finally(() => setloading(false))
+    }
 
     return (
         <StyledForm>
             <Box
                 component="form"
-                onSubmit={handleSubmit((data) => postData(data))}
+                onSubmit={handleSubmit((data) => {
+                    if(formValues && formValues.id){
+                        updateOrder(data, formValues.id);
+                    }else{
+                        postOrder(data);
+                    }
+                })}
             >
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                     <TextField
@@ -89,7 +125,7 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
                         id="name"
                         label="Name"
                         variant="outlined"
-                        {...register("name", { required: true, maxLength: 10 })}
+                        {...register("name", { required: true, maxLength: 50 })}
                     />
                     <TextField
                         error={!!errors.price}
@@ -104,17 +140,26 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
                         error={!!errors.type}
                         {...register("type", { required: true })}
                     >
-                        <InputLabel id="type">Type</InputLabel>
-                        <Select
-                            labelId="type"
-                            id="type"
-                            label="Type"
-                            value={watch("type") || ""}
-                            onChange={(e) => setValue("type", e.target.value)}
-                        >
-                            <MenuItem value="consuming">Consuming</MenuItem>
-                            <MenuItem value="not consuming">Not consuming</MenuItem>
-                        </Select>
+                        <InputLabel id="type-label">Type</InputLabel>
+                        <Controller
+                            name='type'
+                            control={control}
+                            defaultValue=""
+                            rules={{ required: true }}
+                            render={({ field }) => (
+                                <Select
+                                    labelId="type-label"
+                                    id="type"
+                                    label="Type"
+                                    {...field}
+                                    value={field.value || ""}
+                                    onChange={(e) => field.onChange(e.target.value)}
+                                >
+                                    <MenuItem value="consuming">Consuming</MenuItem>
+                                    <MenuItem value="not consuming">Not consuming</MenuItem>
+                                </Select>
+                            )}
+                        />
                     </FormControl>
                     <TextField
                         error={!!errors.weight}
@@ -122,14 +167,15 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
                         label="Weight (gr)"
                         variant="outlined"
                         type='number'
-                        {...register("weight", { required: true, maxLength: 10 })}
+                        {...register("weight", { required: true, maxLength: 50 })}
                     />
                     <Controller
                         name="orderDate"
                         control={control}
-                        render={({ field: { onChange, value }, fieldState: { error } }) => (
+                        render={({ field: { onChange, value } }) => (
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DatePicker
+                                    defaultValue={null}
                                     label="Order Date"
                                     value={value || null}
                                     onChange={value => onChange(value)}
@@ -137,10 +183,18 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
                             </LocalizationProvider>
                         )}
                     />
-                    <FormControlLabel
-                        control={<Checkbox />}
-                        label="Delivered"
-                        {...register("delivered", { maxLength: 1000 })}
+                    <Controller
+                        name="delivered"
+                        control={control}
+                        render={({ field: { onChange, value }, fieldState: { error } }) => (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox checked={value as boolean} />
+                                }
+                                label="Delivered"
+                                {...register("delivered")}
+                            />
+                        )}
                     />
                     <TextField
                         {...register("description", { maxLength: 1000 })}
@@ -167,7 +221,7 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
                         Cancel
                     </Button>
 
-                    <Box sx={{ m: 1, position: 'relative', width: 'fit-content' }}>
+                    <Box sx={{ position: 'relative', width: 'fit-content' }}>
                         <Button
                             type='submit'
                             variant='contained'

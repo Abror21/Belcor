@@ -1,25 +1,14 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import app from '../../firebaseConfig';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, remove } from 'firebase/database';
 import { Button, CircularProgress, IconButton, Snackbar } from '@mui/material';
 import Modal from '../../components/modal';
 import SubmitForm from './components/submit-form';
 import Table from '../../components/table';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import IconElement from './components/icon-element';
+import { Dayjs } from 'dayjs';
 
-// interface Data {
-//     delivered: string;
-//     description: string;
-//     id: string;
-//     name: string;
-//     orderData: string;
-//     price: string;
-//     type: string;
-//     weight: string;
-// }
 export interface HeadCell {
     id: string;
     label: string;
@@ -29,6 +18,16 @@ export interface HeadCell {
 export type DynamicObject = {
     [key: string]: any;
 };
+export interface InputProps {
+    name: string;
+    price: number | null;
+    type: string;
+    weight: number | null;
+    orderDate: Dayjs | null;
+    delivered: boolean | string;
+    description: string;
+    id?: string | undefined;
+}
 
 export default function Home() {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -36,6 +35,7 @@ export default function Home() {
     const [isSnackOpen, setIsSnackOpen] = useState<boolean>(false);
     const [loading, setloading] = useState(false);
     const [orders, setOrders] = useState<any>([]);
+    const [formValues, setFormValues] = useState<InputProps | null>(null);
 
     const fetchOrders = async () => {
         setloading(true);
@@ -53,17 +53,22 @@ export default function Home() {
             setSnackMessage('Something went wrong');
         }
     }
-    // console.log('orders: ', orders);
+    const removeOrder = async(id: string) => {
+        const db = getDatabase(app);
+        const dbRef = ref(db, `orders/${id}`);
+        await remove(dbRef);
+        fetchOrders();
+    }
 
-    React.useEffect(() => {
+    useEffect(() => {
         fetchOrders();
     }, [])
 
     const columns: HeadCell[] = [
         {
-            id: 'icon',
+            id: '',
             label: '',
-            render: (param, call=()=>{}) => (
+            render: (param, call = () => { }) => (
                 <IconButton
                     aria-label="expand row"
                     size="small"
@@ -98,6 +103,39 @@ export default function Home() {
             id: 'delivered',
             label: 'Delivery status',
         },
+        {
+            id: '',
+            label: '',
+            render: (param) => {
+                return (
+                    <Button
+                        variant='outlined'
+                        color='success'
+                        onClick={() => {
+                            setFormValues(param);
+                            setIsModalOpen(true);
+                        }}
+                    >
+                        Update
+                    </Button>
+                )
+            }
+        },
+        {
+            id: '',
+            label: '',
+            render: (param) => {
+                return (
+                    <Button
+                        variant='outlined'
+                        color='error'
+                        onClick={() => removeOrder(param.id)}
+                    >
+                        Delete
+                    </Button>
+                )
+            }
+        },
     ];
 
     const vertical = 'top';
@@ -114,7 +152,10 @@ export default function Home() {
                     variant="contained"
                     color="success"
                     disabled={loading}
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => {
+                        setFormValues(null);
+                        setIsModalOpen(true);
+                    }}
                 >
                     Add Order
                 </Button>
@@ -136,7 +177,7 @@ export default function Home() {
                 loading={loading}
                 pagination={true}
                 paginationPerPageOptions={[5, 10, 15, 20]}
-                headCells={columns}
+                columns={columns}
                 data={orders}
             />
             <Modal
@@ -150,6 +191,7 @@ export default function Home() {
                     openSnack={setIsSnackOpen}
                     fetchOrders={fetchOrders}
                     setloading={setloading}
+                    formValues={formValues}
                 />
             </Modal>
             <Snackbar

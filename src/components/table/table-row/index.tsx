@@ -33,7 +33,6 @@ const CustomTableRow = ({ row, headCells }: TableRowProps) => {
     <>
       <TableRow
         hover
-        // onClick={(event) => handleClick(event, row.id)}
         tabIndex={-1}
         key={row.id}
         sx={{ cursor: 'pointer' }}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { StyledTable } from './style'
-import { Box, CircularProgress, Collapse, IconButton, Paper, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Typography } from '@mui/material';
+import { Box, CircularProgress, Paper, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Typography } from '@mui/material';
 import UITable from '@mui/material/Table';
 import { visuallyHidden } from '@mui/utils';
 import { DynamicObject, HeadCell } from '../../pages/home';
@@ -13,7 +13,7 @@ interface TableProps {
     pagination?: boolean;
     paginationPerPageOptions?: number[];
     data: DynamicObject[];
-    headCells: HeadCell[];
+    columns: HeadCell[];
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -42,10 +42,8 @@ const Table = ({
     pagination = false,
     paginationPerPageOptions = [10, 25, 50],
     data,
-    headCells
+    columns
 }: TableProps) => {
-    console.log('headCells: ', headCells);
-    console.log('data: ', data);
 
     const [order, setOrder] = React.useState<Order>('asc');
     const [orderBy, setOrderBy] = React.useState('calories');
@@ -65,25 +63,6 @@ const Table = ({
         setOrderBy(property);
     };
 
-    // const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    //     const selectedIndex = selected.indexOf(id);
-    //     let newSelected: readonly number[] = [];
-
-    //     if (selectedIndex === -1) {
-    //         newSelected = newSelected.concat(selected, id);
-    //     } else if (selectedIndex === 0) {
-    //         newSelected = newSelected.concat(selected.slice(1));
-    //     } else if (selectedIndex === selected.length - 1) {
-    //         newSelected = newSelected.concat(selected.slice(0, -1));
-    //     } else if (selectedIndex > 0) {
-    //         newSelected = newSelected.concat(
-    //             selected.slice(0, selectedIndex),
-    //             selected.slice(selectedIndex + 1),
-    //         );
-    //     }
-    //     setSelected(newSelected);
-    // };
-
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
     };
@@ -96,13 +75,11 @@ const Table = ({
     const createSortHandler = (property: any) => (event: React.MouseEvent<unknown>) => {
         handleRequestSort(event, property);
     };
-    console.log('visibleRows: ', visibleRows);
-
 
     return (
         <StyledTable>
             {
-                visibleRows.length > 0 ?
+                data.length > 0 ?
                     <Paper sx={{ width: '100%', mb: 2, position: 'relative', }}>
                         {loading && (
                             <CircularProgress
@@ -121,11 +98,11 @@ const Table = ({
                             <UITable>
                                 <TableHead>
                                     <TableRow>
-                                        {headCells.map((headCell) => {
-                                            if (!headCell.label) {
+                                        {columns.map(column => {
+                                            if (!column.label) {
                                                 return (
                                                     <TableCell
-                                                        key={headCell.id}
+                                                        key={column.id}
                                                         padding='normal'
                                                     >
                                                     </TableCell>
@@ -133,17 +110,17 @@ const Table = ({
                                             } else {
                                                 return (
                                                     <TableCell
-                                                        key={headCell.id}
+                                                        key={column.id}
                                                         padding='normal'
-                                                        sortDirection={orderBy === headCell.id ? order : false}
+                                                        sortDirection={orderBy === column.id ? order : false}
                                                     >
                                                         <TableSortLabel
-                                                            active={orderBy === headCell.id}
-                                                            direction={orderBy === headCell.id ? order : 'asc'}
-                                                            onClick={createSortHandler(headCell.id)}
+                                                            active={orderBy === column.id}
+                                                            direction={orderBy === column.id ? order : 'asc'}
+                                                            onClick={createSortHandler(column.id)}
                                                         >
-                                                            <b>{headCell.label}</b>
-                                                            {orderBy === headCell.id ? (
+                                                            <b>{column.label}</b>
+                                                            {orderBy === column.id ? (
                                                                 <Box component="span" sx={visuallyHidden}>
                                                                     {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
                                                                 </Box>
@@ -161,7 +138,7 @@ const Table = ({
                                         return (
                                             <CustomTableRow
                                                 row={row}
-                                                headCells={headCells}
+                                                headCells={columns}
                                             />
                                         );
                                     })}
