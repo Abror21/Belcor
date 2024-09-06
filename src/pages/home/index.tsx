@@ -39,7 +39,7 @@ export default function Home() {
     const [formValues, setFormValues] = useState<InputProps | null>(null);
 
     const { data, error, isLoading } = useGetAllProductsQuery('')
-    console.log('products: ', data.products);
+    console.log('products: ', data?.products);
 
     const fetchOrders = async () => {
         setloading(true);
