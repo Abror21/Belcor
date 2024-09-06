@@ -8,6 +8,7 @@ import SubmitForm from './components/submit-form';
 import Table from '../../components/table';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Dayjs } from 'dayjs';
+import { useGetAllProductsQuery } from '../../API/productsSlice';
 
 export interface HeadCell {
     id: string;
@@ -37,6 +38,9 @@ export default function Home() {
     const [orders, setOrders] = useState<any>([]);
     const [formValues, setFormValues] = useState<InputProps | null>(null);
 
+    const { data, error, isLoading } = useGetAllProductsQuery('')
+    console.log('products: ', data.products);
+
     const fetchOrders = async () => {
         setloading(true);
         const db = getDatabase(app);
@@ -53,7 +57,7 @@ export default function Home() {
             setSnackMessage('Something went wrong');
         }
     }
-    const removeOrder = async(id: string) => {
+    const removeOrder = async (id: string) => {
         const db = getDatabase(app);
         const dbRef = ref(db, `orders/${id}`);
         await remove(dbRef);
