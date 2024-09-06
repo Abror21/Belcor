@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { StyledLogin } from './style'
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,7 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const [state, setState] = React.useState<State>({
+  const [state, setState] = useState<State>({
     open: false,
     vertical: 'top',
     horizontal: 'center',
@@ -33,7 +33,6 @@ const Login = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors }
   } = useForm({
     defaultValues: {
@@ -59,6 +58,7 @@ const Login = () => {
         {errors.username && <p>This field is required</p>}
         <label>Password</label>
         <input
+          type='password'
           {...register("password", { required: true, maxLength: 10 })}
         />
         {errors.password && <p>This field is required</p>}

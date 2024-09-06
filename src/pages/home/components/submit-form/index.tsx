@@ -37,7 +37,6 @@ const SubmitForm = ({ loading, closeModal, snackMessage, openSnack, fetchOrders,
     const {
         register,
         handleSubmit,
-        watch,
         setValue,
         control,
         formState: { errors },

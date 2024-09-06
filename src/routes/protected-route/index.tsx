@@ -1,31 +1,16 @@
 import React, { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom';
+import { isTokenExpired } from '../../config/isTokenExpired';
 
 interface ProtectedRouteProps {
     children: ReactNode;
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-    // const { remove, getDecoded } = useJwt();
-    // const { allowedPages } = useUserState();
 
     const token = localStorage.getItem("token");
+    const isExpiredToken: boolean = isTokenExpired(token);
     if (!token) {
-        // const currentDate = Date.now() / 1000;
-        // if (currentDate > tokenExp) {
-        //     remove();
-        //     localStorage.clear();
-        //     return <Navigate to="/login" />;
-        // } else {
-        //     if (!allowedPages) {
-        //         remove();
-        //         localStorage.clear();
-        //         return <Navigate to="/login" />;
-        //     }
-        //     if (!allowedPages?.includes(permission)) {
-        //         return <Navigate to="/unauthorized" />;
-        //     }
-        // }
         return <Navigate to="/login" />;
     }
 
